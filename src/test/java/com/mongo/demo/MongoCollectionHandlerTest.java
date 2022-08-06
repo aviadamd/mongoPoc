@@ -22,6 +22,7 @@ public class MongoCollectionHandlerTest {
 
     @BeforeEach
     public void initTest() {
+        //-ea -Dmongodb.uri=localhost:27017
         String connectionString = System.getProperty("mongodb.uri");
         MongoConnection mongoConnection = new MongoConnection(connectionString,"aviad");
         this.mongoInstance = new MongoCollectionHandler(mongoConnection, "mydbcollection");
