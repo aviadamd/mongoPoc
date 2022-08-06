@@ -95,6 +95,16 @@ public class MongoCollectionReactiveRepoImpl implements
     }
 
     @Override
+    public Mono<Optional<Document>> findElementByQuery(Bson searchQuery) {
+        try {
+            return Mono.just(Optional.ofNullable(this.mongoCollection.find(searchQuery).first()));
+        } catch (Exception e) {
+            logger.error("findElementBy error :" + e.getMessage());
+            return Mono.just(Optional.empty());
+        }
+    }
+
+    @Override
     public Mono<Optional<Document>> findElementByQueries(BasicDBObject searchQuery) {
         try {
             return Mono.just(Optional.ofNullable(this.mongoCollection.find(searchQuery).first()));

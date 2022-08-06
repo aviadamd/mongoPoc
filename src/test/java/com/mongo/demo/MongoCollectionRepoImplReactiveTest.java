@@ -54,6 +54,13 @@ public class MongoCollectionRepoImplReactiveTest {
                         () -> isElementNonExitsDoc.set(true)))
                 .isDisposed();
         Assertions.assertTrue(isElementNonExitsDoc.get(),"document exists");
+
+        this.mongoInstance
+                .findElementByQuery(Filters.eq("_id","66"))
+                .subscribe(e -> e.ifPresentOrElse(
+                        document -> logger.info("find id " + document.toJson()),
+                        () -> isElementNonExitsDoc.set(true)))
+                .isDisposed();
     }
 
     @Test
