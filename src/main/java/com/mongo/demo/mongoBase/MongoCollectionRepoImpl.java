@@ -12,19 +12,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class MongoCollectionHandler {
+public class MongoCollectionRepoImpl implements MongoCollectionRepo {
 
     private final String dbName;
     private final MongoConnection mongoConnection;
     private final MongoCollection<Document> mongoCollection;
-    private final Logger logger = Loggers.getLogger(MongoCollectionHandler.class.getName());
+    private final Logger logger = Loggers.getLogger(MongoCollectionRepoImpl.class.getName());
 
-    public MongoCollectionHandler(MongoConnection mongoConnection, String collectionName) {
+    public MongoCollectionRepoImpl(MongoConnection mongoConnection, String collectionName) {
         this.mongoConnection = mongoConnection;
         this.mongoCollection = mongoConnection.getMongoDatabase().getCollection(collectionName);
         this.dbName = mongoConnection.getMongoDatabase().getName();
     }
 
+    @Override
     public Document findElementBy(BasicDBObject searchQuery) {
         try {
             return this.mongoCollection.find(searchQuery).first();
@@ -34,6 +35,7 @@ public class MongoCollectionHandler {
         }
     }
 
+    @Override
     public FindIterable<Document> findElementsBy(BasicDBObject searchQuery) {
         try {
             return this.mongoCollection.find(searchQuery);
@@ -43,6 +45,7 @@ public class MongoCollectionHandler {
         }
     }
 
+    @Override
     public List<Document> documentsGetAllElements() {
         List<Document> documentList = new ArrayList<>();
         try {
@@ -56,10 +59,12 @@ public class MongoCollectionHandler {
         return documentList;
     }
 
+    @Override
     public FindIterable<Document> iterableGetAllElements() {
         return this.mongoCollection.find();
     }
 
+    @Override
     public void deleteElement(Bson bson) {
         try {
             this.mongoCollection.deleteOne(bson);
@@ -68,6 +73,7 @@ public class MongoCollectionHandler {
         }
     }
 
+    @Override
     public void updateElement(Bson from, Bson to) {
         try {
             this.mongoCollection.updateOne(from, to);
@@ -76,6 +82,7 @@ public class MongoCollectionHandler {
         }
     }
 
+    @Override
     public void insertElement(Document document) {
         try {
             this.mongoCollection.insertOne(document);
@@ -84,6 +91,7 @@ public class MongoCollectionHandler {
         }
     }
 
+    @Override
     public void insertElements(List<Document> documentList) {
         try {
             mongoCollection.insertMany(documentList);
@@ -92,6 +100,7 @@ public class MongoCollectionHandler {
         }
     }
 
+    @Override
     public void replaceElement(String key, Object oldObject, Document document) {
         try {
             Document find = new Document(key, oldObject);
@@ -101,6 +110,7 @@ public class MongoCollectionHandler {
         }
     }
 
+    @Override
     public void replaceElements(HashMap<String,Object> documents, Document document) {
         try {
             for (Map.Entry<String, Object> entry : documents.entrySet()) {
@@ -112,6 +122,7 @@ public class MongoCollectionHandler {
         }
     }
 
+    @Override
     public String getText(Document document, String name) {
         try {
             return document.getString(name);
@@ -120,12 +131,14 @@ public class MongoCollectionHandler {
         }
     }
 
+    @Override
     public void dropDataBase() {
         this.mongoConnection
                 .getMongoClient()
                 .dropDatabase(this.dbName);
     }
 
+    @Override
     public void close() {
         this.mongoConnection
                 .getMongoClient()
