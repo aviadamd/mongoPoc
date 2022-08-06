@@ -16,7 +16,6 @@ public class MongoConnection {
     public MongoClient getMongoClient() {
         return mongoClient;
     }
-
     public MongoDatabase getMongoDatabase() {
         return mongoDatabase;
     }
