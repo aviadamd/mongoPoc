@@ -1,39 +1,38 @@
-package com.mongo.demo.mongoBase;
+package com.mongo.demo.base.reactive;
 
+import com.mongo.demo.base.MongoBase;
+import com.mongo.demo.base.notReactive.MongoCollectionRepoImpl;
+import com.mongo.demo.base.MongoConnection;
 import com.mongodb.BasicDBObject;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
-import com.mongodb.client.model.Projections;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.diagnostics.logging.Logger;
-import com.mongodb.diagnostics.logging.Loggers;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
 import java.util.*;
+import static com.mongodb.diagnostics.logging.Loggers.getLogger;
 
 public class MongoCollectionReactiveRepoImpl implements
         MongoCollectionReactiveRepo.OnCloseDb, MongoCollectionReactiveRepo.OnUpdate,
         MongoCollectionReactiveRepo.OnSearchBy, MongoCollectionReactiveRepo.OnSearch {
 
-    private final String dbName;
-    private final MongoConnection mongoConnection;
-    private final MongoCollection<Document> mongoCollection;
-    private final Logger logger = Loggers.getLogger(MongoCollectionRepoImpl.class.getName());
+    private final MongoBase mongoBase;
+    private final Logger logger = getLogger(MongoCollectionRepoImpl.class.getName());
 
-    public MongoCollectionReactiveRepoImpl(MongoConnection mongoConnection, String collectionName) {
-        this.mongoConnection = mongoConnection;
-        this.mongoCollection = mongoConnection.getMongoDatabase().getCollection(collectionName);
-        this.dbName = mongoConnection.getMongoDatabase().getName();
+    public MongoCollectionReactiveRepoImpl(
+            MongoConnection mongoConnection, String collectionName) {
+        this.mongoBase = new MongoBase(mongoConnection, collectionName);
     }
 
     @Override
     public Mono<Boolean> deleteElement(Bson bson) {
         try {
-            return Mono.just(this.mongoCollection.deleteOne(bson).wasAcknowledged());
+            return Mono.just(this.mongoBase
+                    .getMongoCollection()
+                    .deleteOne(bson)
+                    .wasAcknowledged());
         } catch (Exception e) {
             logger.info("deleteElement error: " + e.getMessage());
             return Mono.just(false);
@@ -43,7 +42,9 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Mono<Document> insertElement(Document document) {
         try {
-            this.mongoCollection.insertOne(document);
+            this.mongoBase
+                    .getMongoCollection()
+                    .insertOne(document);
             return Mono.just(document);
         } catch (Exception e) {
             logger.info("insertElement error: " + e.getMessage());
@@ -54,7 +55,9 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Mono<List<Document>> insertElements(List<Document> documentList) {
         try {
-            this.mongoCollection.insertMany(documentList);
+            this.mongoBase
+                    .getMongoCollection()
+                    .insertMany(documentList);
             return Mono.just(documentList);
         } catch (Exception e) {
             logger.info("insertElement error: " + e.getMessage());
@@ -65,7 +68,9 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Mono<UpdateResult> updateElement(Bson from, Bson to) {
         try {
-            return Mono.just(this.mongoCollection.updateOne(from, to));
+            return Mono.just(this.mongoBase
+                    .getMongoCollection()
+                    .updateOne(from, to));
         } catch (Exception e) {
             logger.info("updateElement error: " + e.getMessage());
             return Mono.empty();
@@ -75,7 +80,9 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Mono<UpdateResult> replaceElement(String key, Object oldObject, Document document) {
         try {
-            return Mono.just(this.mongoCollection.replaceOne(new Document(key, oldObject), document));
+            return Mono.just(this.mongoBase
+                    .getMongoCollection()
+                    .replaceOne(new Document(key, oldObject), document));
         } catch (Exception e) {
             logger.info("replaceElement error: " + e.getMessage());
             return Mono.empty();
@@ -87,7 +94,9 @@ public class MongoCollectionReactiveRepoImpl implements
         try {
             return Flux.fromIterable(documents.entrySet())
                     .next()
-                    .doOnNext(e -> this.mongoCollection.replaceOne(new Document(e.getKey(), e.getValue()), document));
+                    .doOnNext(e -> this.mongoBase
+                            .getMongoCollection()
+                            .replaceOne(new Document(e.getKey(), e.getValue()), document));
         } catch (Exception e) {
             logger.info("replaceElements error: " + e.getMessage());
             return Mono.empty();
@@ -97,7 +106,10 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Mono<Optional<Document>> findElementByQuery(Bson searchQuery) {
         try {
-            return Mono.just(Optional.ofNullable(this.mongoCollection.find(searchQuery).first()));
+            return Mono.just(Optional.ofNullable(this.mongoBase
+                    .getMongoCollection()
+                    .find(searchQuery)
+                    .first()));
         } catch (Exception e) {
             logger.error("findElementBy error :" + e.getMessage());
             return Mono.just(Optional.empty());
@@ -107,7 +119,10 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Mono<Optional<Document>> findElementByQueries(BasicDBObject searchQuery) {
         try {
-            return Mono.just(Optional.ofNullable(this.mongoCollection.find(searchQuery).first()));
+            return Mono.just(Optional.ofNullable(this.mongoBase
+                    .getMongoCollection()
+                    .find(searchQuery)
+                    .first()));
         } catch (Exception e) {
             logger.error("findElementBy error :" + e.getMessage());
             return Mono.just(Optional.empty());
@@ -117,7 +132,10 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Flux<MongoCursor<Document>> findsElementsBySingleQuery(Bson query) {
         try {
-            return Flux.just(this.mongoCollection.find(query).iterator());
+            return Flux.just(this.mongoBase
+                    .getMongoCollection()
+                    .find(query)
+                    .iterator());
         } catch (Exception e) {
             logger.error("findElementsBy error: " +  e.getMessage());
             return Flux.empty();
@@ -127,7 +145,9 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Flux<MongoCursor<Document>> findsElementsByQueriesOptionOne(BasicDBObject searchQuery) {
         try {
-            return Flux.just(this.mongoCollection.find(searchQuery).iterator());
+            return Flux.just(this.mongoBase.getMongoCollection()
+                    .find(searchQuery)
+                    .iterator());
         } catch (Exception e) {
             logger.error("findElementsBy error: " +  e.getMessage());
             return Flux.empty();
@@ -137,7 +157,9 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Flux<Document> findsElementsByQueriesOptionTwo(BasicDBObject searchQuery) {
         try {
-            return Flux.fromIterable(this.mongoCollection.find(searchQuery));
+            return Flux.fromIterable(this.mongoBase
+                    .getMongoCollection()
+                    .find(searchQuery));
         } catch (Exception e) {
             logger.error("findElementsBy error: " + e.getMessage());
             return Flux.empty();
@@ -148,7 +170,9 @@ public class MongoCollectionReactiveRepoImpl implements
     public Flux<Document> documentsGetAllElements() {
         List<Document> documentList = new ArrayList<>();
         try {
-            for (Document document : this.mongoCollection.find()) {
+            for (Document document : this.mongoBase
+                    .getMongoCollection()
+                    .find()) {
                 documentList.add(document);
             }
         } catch (Exception e) {
@@ -160,7 +184,9 @@ public class MongoCollectionReactiveRepoImpl implements
     @Override
     public Flux<Document> iterableGetAllElements() {
         try {
-            return Flux.fromIterable(this.mongoCollection.find());
+            return Flux.fromIterable(this.mongoBase
+                    .getMongoCollection()
+                    .find());
         } catch (Exception e) {
             logger.error("iterableGetAllElements error: " + e.getMessage());
             return Flux.empty();
@@ -169,14 +195,16 @@ public class MongoCollectionReactiveRepoImpl implements
 
     @Override
     public void dropDataBase() {
-        this.mongoConnection
+        this.mongoBase
+                .getMongoConnection()
                 .getMongoClient()
-                .dropDatabase(this.dbName);
+                .dropDatabase(this.mongoBase.getDbName());
     }
 
     @Override
     public void close() {
-        this.mongoConnection
+        this.mongoBase
+                .getMongoConnection()
                 .getMongoClient()
                 .close();
     }

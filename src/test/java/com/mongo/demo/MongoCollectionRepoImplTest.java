@@ -2,8 +2,8 @@ package com.mongo.demo;
 
 import com.mongo.demo.dto.PersonInfo;
 import com.mongo.demo.dto.PersonInfoAdapter;
-import com.mongo.demo.mongoBase.MongoCollectionRepoImpl;
-import com.mongo.demo.mongoBase.MongoConnection;
+import com.mongo.demo.base.notReactive.MongoCollectionRepoImpl;
+import com.mongo.demo.base.MongoConnection;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;

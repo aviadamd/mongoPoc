@@ -1,4 +1,4 @@
-package com.mongo.demo.mongoBase;
+package com.mongo.demo.base.notReactive;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.FindIterable;

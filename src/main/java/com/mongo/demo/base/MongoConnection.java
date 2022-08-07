@@ -1,4 +1,4 @@
-package com.mongo.demo.mongoBase;
+package com.mongo.demo.base;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;

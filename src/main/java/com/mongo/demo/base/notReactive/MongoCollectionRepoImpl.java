@@ -1,8 +1,9 @@
-package com.mongo.demo.mongoBase;
+package com.mongo.demo.base.notReactive;
 
+import com.mongo.demo.base.MongoBase;
+import com.mongo.demo.base.MongoConnection;
 import com.mongodb.BasicDBObject;
 import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.diagnostics.logging.Logger;
 import com.mongodb.diagnostics.logging.Loggers;
 import org.bson.Document;
@@ -12,23 +13,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.mongodb.diagnostics.logging.Loggers.getLogger;
+
 public class MongoCollectionRepoImpl implements MongoCollectionRepo {
 
-    private final String dbName;
-    private final MongoConnection mongoConnection;
-    private final MongoCollection<Document> mongoCollection;
-    private final Logger logger = Loggers.getLogger(MongoCollectionRepoImpl.class.getName());
+    private final MongoBase mongoBase;
+    private final Logger logger = getLogger(MongoCollectionRepoImpl.class.getName());
 
-    public MongoCollectionRepoImpl(MongoConnection mongoConnection, String collectionName) {
-        this.mongoConnection = mongoConnection;
-        this.mongoCollection = mongoConnection.getMongoDatabase().getCollection(collectionName);
-        this.dbName = mongoConnection.getMongoDatabase().getName();
+    public MongoCollectionRepoImpl(
+            MongoConnection mongoConnection, String collectionName) {
+        this.mongoBase = new MongoBase(mongoConnection, collectionName);
     }
 
     @Override
     public Document findElementBy(BasicDBObject searchQuery) {
         try {
-            return this.mongoCollection.find(searchQuery).first();
+            return this.mongoBase.getMongoCollection().find(searchQuery).first();
         } catch (Exception e) {
             logger.info("findElementBy error: " + e.getMessage());
             return new Document();
@@ -38,10 +38,10 @@ public class MongoCollectionRepoImpl implements MongoCollectionRepo {
     @Override
     public FindIterable<Document> findElementsBy(BasicDBObject searchQuery) {
         try {
-            return this.mongoCollection.find(searchQuery);
+            return this.mongoBase.getMongoCollection().find(searchQuery);
         } catch (Exception e) {
             logger.info("findElementsBy error: " + e.getMessage());
-            return this.mongoCollection.find();
+            return this.mongoBase.getMongoCollection().find();
         }
     }
 
@@ -61,13 +61,13 @@ public class MongoCollectionRepoImpl implements MongoCollectionRepo {
 
     @Override
     public FindIterable<Document> iterableGetAllElements() {
-        return this.mongoCollection.find();
+        return this.mongoBase.getMongoCollection().find();
     }
 
     @Override
     public void deleteElement(Bson bson) {
         try {
-            this.mongoCollection.deleteOne(bson);
+            this.mongoBase.getMongoCollection().deleteOne(bson);
         } catch (Exception e) {
             logger.error("deleteElement error: " + e.getMessage());
         }
@@ -76,7 +76,7 @@ public class MongoCollectionRepoImpl implements MongoCollectionRepo {
     @Override
     public void updateElement(Bson from, Bson to) {
         try {
-            this.mongoCollection.updateOne(from, to);
+            this.mongoBase.getMongoCollection().updateOne(from, to);
         } catch (Exception e) {
             logger.error("updateElement error: " + e.getMessage());
         }
@@ -85,7 +85,7 @@ public class MongoCollectionRepoImpl implements MongoCollectionRepo {
     @Override
     public void insertElement(Document document) {
         try {
-            this.mongoCollection.insertOne(document);
+            this.mongoBase.getMongoCollection().insertOne(document);
         } catch (Exception e) {
             logger.error("insertElement error: " + e.getMessage());
         }
@@ -94,7 +94,7 @@ public class MongoCollectionRepoImpl implements MongoCollectionRepo {
     @Override
     public void insertElements(List<Document> documentList) {
         try {
-            mongoCollection.insertMany(documentList);
+            mongoBase.getMongoCollection().insertMany(documentList);
         } catch (Exception e) {
             logger.error("insertElements error: " + e.getMessage());
         }
@@ -104,7 +104,7 @@ public class MongoCollectionRepoImpl implements MongoCollectionRepo {
     public void replaceElement(String key, Object oldObject, Document document) {
         try {
             Document find = new Document(key, oldObject);
-            mongoCollection.replaceOne(find, document);
+            mongoBase.getMongoCollection().replaceOne(find, document);
         } catch (Exception e) {
             logger.error("replaceElement error: " + e.getMessage());
         }
@@ -115,7 +115,7 @@ public class MongoCollectionRepoImpl implements MongoCollectionRepo {
         try {
             for (Map.Entry<String, Object> entry : documents.entrySet()) {
                 Document find = new Document(entry.getKey(), entry.getValue());
-                mongoCollection.replaceOne(find, document);
+                mongoBase.getMongoCollection().replaceOne(find, document);
             }
         } catch (Exception e) {
             logger.error("replaceElements error: " + e.getMessage());
@@ -133,14 +133,14 @@ public class MongoCollectionRepoImpl implements MongoCollectionRepo {
 
     @Override
     public void dropDataBase() {
-        this.mongoConnection
+        this.mongoBase.getMongoConnection()
                 .getMongoClient()
-                .dropDatabase(this.dbName);
+                .dropDatabase(this.mongoBase.getDbName());
     }
 
     @Override
     public void close() {
-        this.mongoConnection
+        this.mongoBase.getMongoConnection()
                 .getMongoClient()
                 .close();
     }

@@ -1,6 +1,6 @@
 package com.mongo.demo.dto;
 
-import com.mongo.demo.mongoBase.DocumentAdapter;
+import com.mongo.demo.base.DocumentAdapter;
 import org.bson.Document;
 
 public class PersonInfoAdapter {
